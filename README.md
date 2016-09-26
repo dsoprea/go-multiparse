@@ -1,6 +1,6 @@
 ## Introduction
 
-`go-multiparse` allows you to easily convert one type of value into another, e.g. strings from query values in web requests to integers or floats. The original purpose of this project is to reduce the repetition in processing string values though it is not limited to just parsing strings. For more details see below. Parse errors will simply panic.
+`go-multiparse` allows you to easily convert one type of value into a built-in type (e.g. strings from query values in web requests to integers or floats). The original purpose of this project is to reduce the repetition in parsing from string values in web-requests though it is not limited to just parsing strings. Parse errors will simply panic.
 
 
 ## Example
@@ -15,7 +15,7 @@ value := valueInterface.(float64)
 
 ## Implementation
 
-This is a general parsing framework. Parser implementations must satisfy the `Parser` interface and be registered for a specific input type. You might have to register multiple times if you are trying to parse both a base type *and* one or more aliases of it. The `StringParser` is included and parses over string values. It is automatically registered.
+This is a general parsing framework. Parser implementations must satisfy the `Parser` interface and be registered for specific input types. You will have to register multiple times if you are trying to parse both a base type *and* one or more aliases of it. The `StringParser` is included and parses over string values. It is automatically registered.
 
 
 ### Parser Interface
@@ -48,24 +48,52 @@ type Parser interface {
 }
 ```
 
-To register a new implementation, use `AddParser`. An example based on how we automatically register `StringParser`:
+To register a new implementation, use `AddParser()`. An example based on how we automatically register `StringParser`:
 
 ```go
 type := reflect.TypeOf("")
 parse.AddParser(type, parserInstance)
 ```
 
-Of course, it usually would not make any sense to register another string parser. However, if you have a more exotic type that you often need to convert, implement the interface methods that make sense, panic on the others, and use `AddParser` to register it.
+Of course, it would not make any sense to register another string parser. However, if you have a more exotic type that you often need to convert, implement the interface methods that you require, panic on the others, and use `AddParser()` to register it.
 
-The `Parse()` function is a convenience wrapper. You may acquire and use the parser instance directly:
+
+### Alternate Usage
+
+The `Parse()` function is a convenience wrapper (which uses a dictionary to find the method name). You may acquire and use the `Parser` instance directly:
 
 ```go
 // import "reflect"
 
-valueRaw := "123.456"
-type := reflect.TypeOf(valueRaw)
-parser := parse.GetParser(type)
-value := parser.Float64(valueRaw)
+vRaw := "123.456"
+t := reflect.TypeOf(vRaw)
+p := parse.GetParser(t)
+v := p.Float64(vRaw)
 ```
 
 Note that using a parser this way returns the desired type directly (not as a `interface{}`).
+
+
+## Additional Example
+
+This is a simple implementation of parsing values from HTTP request arguments:
+
+```go
+// import "net/http"
+// import "github.com/dsoprea/go-multiparse"
+
+func ParseArg(r *http.Request, name string, kindName string, required bool) (value interface{}) {
+    valueRaw := r.FormValue(name)
+    if valueRaw == "" {
+        if required == true {
+            panic("query argument empty or omitted")
+        } else {
+            return nil
+        }
+    }
+
+    return parse.Parse(valueRaw, kindName)
+}
+
+// ParseArg(r, "x", "float64", true)
+```
