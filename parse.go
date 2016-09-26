@@ -3,7 +3,6 @@ package parse
 import (
     "fmt"
     "reflect"
-    "go/types"
 )
 
 var (
@@ -42,26 +41,28 @@ var (
         "bool": "Bool",
     }
 
+    stringType = reflect.TypeOf("")
+
     KindNameZeroType = map[string]reflect.Type {
-        "string": reflect.TypeOf(types.Bool),
-        "int8": reflect.TypeOf(types.Int8),
-        "int16": reflect.TypeOf(types.Int16),
-        "int32": reflect.TypeOf(types.Int32),
-        "int64": reflect.TypeOf(types.Int64),
-        "uint8": reflect.TypeOf(types.Uint8),
-        "uint16": reflect.TypeOf(types.Uint16),
-        "uint32": reflect.TypeOf(types.Uint32),
-        "uint64": reflect.TypeOf(types.Uint64),
-        "hex8": reflect.TypeOf(types.String),
-        "hex16": reflect.TypeOf(types.String),
-        "hex32": reflect.TypeOf(types.String),
-        "hex64": reflect.TypeOf(types.String),
-        "float32": reflect.TypeOf(types.Float32),
-        "float64": reflect.TypeOf(types.Float64),
-        "bool": reflect.TypeOf(types.Bool),
+        "string": stringType,
+        "int8": reflect.TypeOf(int8(0)),
+        "int16": reflect.TypeOf(int16(0)),
+        "int32": reflect.TypeOf(int32(0)),
+        "int64": reflect.TypeOf(int64(0)),
+        "uint8": reflect.TypeOf(uint8(0)),
+        "uint16": reflect.TypeOf(uint16(0)),
+        "uint32": reflect.TypeOf(uint32(0)),
+        "uint64": reflect.TypeOf(uint64(0)),
+        "hex8": stringType,
+        "hex16": stringType,
+        "hex32": stringType,
+        "hex64": stringType,
+        "float32": reflect.TypeOf(float32(0)),
+        "float64": reflect.TypeOf(float64(0)),
+        "bool": reflect.TypeOf(true),
     }
 
-    parsers = map[reflect.Kind]Parser {}
+    parsers = map[string]Parser {}
 )
 
 type Parser interface {
@@ -88,14 +89,14 @@ type Parser interface {
     Bool(value interface{}) bool
 }
 
-func AddParser(fromKind reflect.Kind, p Parser) {
-    parsers[fromKind] = p
+func AddParser(fromType reflect.Type, p Parser) {
+    parsers[fromType.Name()] = p
 }
 
-func GetParser(k reflect.Kind) Parser {
-    p, found := parsers[k]
+func GetParser(fromType reflect.Type) Parser {
+    p, found := parsers[fromType.Name()]
     if found == false {
-        panic(fmt.Errorf("no parser register for kind [%s]", k))
+        panic(fmt.Errorf("no parser registered for type [%s]", fromType))
     }
 
     return p
@@ -110,12 +111,12 @@ func Parse(valueRaw interface{}, toKindName string) interface{} {
         }
     }
 
-    fromKind := reflect.TypeOf(valueRaw).Kind()
-    p := GetParser(fromKind)
+    fromType := reflect.TypeOf(valueRaw)
+    p := GetParser(fromType)
 
     mn, found := NameMethodMap[toKindName]
     if found == false {
-        panic(fmt.Errorf("no operation from kind (%d) to kind [%s]", fromKind, toKindName))
+        panic(fmt.Errorf("no operation from type [%s] to kind [%s]", fromType, toKindName))
     }
 
     pValue := reflect.ValueOf(p)

@@ -2,7 +2,6 @@ package parse
 
 import (
     "strconv"
-    "reflect"
 )
 
 type StringParser struct {
@@ -157,5 +156,5 @@ func init() {
     var p Parser
     p = NewStringParser()
 
-    AddParser(reflect.String, p)
+    AddParser(stringType, p)
 }
