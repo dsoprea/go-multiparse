@@ -74,26 +74,12 @@ v := p.Float64(vRaw)
 Note that using a parser this way returns the desired type directly (not as a `interface{}`).
 
 
-## Additional Example
+## Utilities
 
-This is a simple implementation of parsing values from HTTP request arguments:
+We also include a convenience function to parse values from an HTTP request 
+(query arguments or body data):
 
 ```go
-// import "net/http"
-// import "github.com/dsoprea/go-multiparse"
-
-func ParseArg(r *http.Request, name string, kindName string, required bool) (value interface{}) {
-    valueRaw := r.FormValue(name)
-    if valueRaw == "" {
-        if required == true {
-            panic("query argument empty or omitted")
-        } else {
-            return nil
-        }
-    }
-
-    return parse.Parse(valueRaw, kindName)
-}
-
-// ParseArg(r, "x", "float64", true)
+// func ParseArg(r *http.Request, name string, kindName string, required bool) (value interface{}) {
+parse.ParseArg(r, "x", "float64", true)
 ```

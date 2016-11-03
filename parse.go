@@ -1,10 +1,13 @@
 package parse
 
 import (
+    "net/http"
+
     "fmt"
     "reflect"
 )
 
+// Maps
 var (
     // Use from standard reflection kinds to internal names.
     KindNameMap = map[reflect.Kind]string {
@@ -129,4 +132,19 @@ func Parse(valueRaw interface{}, toKindName string) interface{} {
     vV := reflect.ValueOf(valueRaw)
     parsed := m.Call([]reflect.Value { vV })
     return parsed[0].Interface()
+}
+
+// ParseRequestArg A convenience function to parse values from an incoming 
+// request.
+func ParseRequestArg(r *http.Request, name string, kindName string, required bool) (value interface{}) {
+    valueRaw := r.FormValue(name)
+    if valueRaw == "" {
+        if required == true {
+            panic(fmt.Errorf("query argument empty or omitted: [%s]", name))
+        } else {
+            return nil
+        }
+    }
+
+    return Parse(valueRaw, kindName)
 }
