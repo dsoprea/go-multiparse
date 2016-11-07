@@ -8,8 +8,7 @@
 ```go
 // import "github.com/dsoprea/go-multiparse"
 
-valueInterface := parse.Parse("123.456", "float64")
-value := valueInterface.(float64)
+value := parse.Parse("123.456", "float64").(float64)
 ```
 
 
