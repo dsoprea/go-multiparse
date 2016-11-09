@@ -5,6 +5,9 @@ import (
 
     "fmt"
     "reflect"
+    "time"
+
+    "github.com/dsoprea/go-logging"
 )
 
 // Maps
@@ -42,9 +45,12 @@ var (
         "float32": "Float32",
         "float64": "Float64",
         "bool": "Bool",
+        "rfc3339": "Rfc3339",
     }
 
     stringType = reflect.TypeOf("")
+    
+    t = time.Time{}
 
     KindNameZeroType = map[string]reflect.Type {
         "string": stringType,
@@ -63,6 +69,7 @@ var (
         "float32": reflect.TypeOf(float32(0)),
         "float64": reflect.TypeOf(float64(0)),
         "bool": reflect.TypeOf(true),
+        "rfc3339": reflect.TypeOf(t),
     }
 
     parsers = map[string]Parser {}
@@ -90,6 +97,8 @@ type Parser interface {
     Float64(value interface{}) float64
 
     Bool(value interface{}) bool
+
+    Rfc3339(value interface{}) time.Time
 }
 
 func AddParser(fromType reflect.Type, p Parser) {
@@ -99,7 +108,7 @@ func AddParser(fromType reflect.Type, p Parser) {
 func GetParser(fromType reflect.Type) Parser {
     p, found := parsers[fromType.Name()]
     if found == false {
-        panic(fmt.Errorf("no parser registered for type [%s]", fromType))
+        log.Panic(fmt.Errorf("no parser registered for type [%s]", fromType))
     }
 
     return p
@@ -108,7 +117,7 @@ func GetParser(fromType reflect.Type) Parser {
 func Parse(valueRaw interface{}, toKindName string) interface{} {
     if valueRaw == nil {
         if t, found := KindNameZeroType[toKindName]; found == false {
-            panic(fmt.Errorf("kind [%s] does not have a zero-type defined", toKindName))
+            log.Panic(fmt.Errorf("kind [%s] does not have a zero-type defined", toKindName))
         } else {
             return reflect.Zero(t)
         }
@@ -119,14 +128,14 @@ func Parse(valueRaw interface{}, toKindName string) interface{} {
 
     mn, found := NameMethodMap[toKindName]
     if found == false {
-        panic(fmt.Errorf("no operation from type [%s] to kind [%s]", fromType, toKindName))
+        log.Panic(fmt.Errorf("no operation from type [%s] to kind [%s]", fromType, toKindName))
     }
 
     pValue := reflect.ValueOf(p)
 
     m := pValue.MethodByName(mn)
     if m.IsValid() == false {
-        panic(fmt.Errorf("parser [%s] method [%s] not valid", pValue.Type(), mn))
+        log.Panic(fmt.Errorf("parser [%s] method [%s] not valid", pValue.Type(), mn))
     }
 
     vV := reflect.ValueOf(valueRaw)
@@ -140,7 +149,7 @@ func ParseRequestArg(r *http.Request, name string, kindName string, required boo
     valueRaw := r.FormValue(name)
     if valueRaw == "" {
         if required == true {
-            panic(fmt.Errorf("query argument empty or omitted: [%s]", name))
+            log.Panic(fmt.Errorf("query argument empty or omitted: [%s]", name))
         } else {
             return nil
         }
