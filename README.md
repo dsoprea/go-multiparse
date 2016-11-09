@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/dsoprea/go-multiparse.svg?branch=master)](https://travis-ci.org/dsoprea/go-multiparse)
+[![Coverage Status](https://coveralls.io/repos/github/dsoprea/go-multiparse/badge.svg?branch=master)](https://coveralls.io/github/dsoprea/go-multiparse?branch=master)
+
 ## Introduction
 
 `go-multiparse` allows you to easily convert one type of value into a built-in type (e.g. strings from query values in web requests to integers or floats). The original purpose of this project is to reduce the repetition in parsing from string values in web-requests though it is not limited to just parsing strings. Parse errors will simply panic.
@@ -44,6 +47,8 @@ type Parser interface {
     Float64(value interface{}) float64
 
     Bool(value interface{}) bool
+
+    Rfc3339(value interface{}) time.Time
 }
 ```
 
