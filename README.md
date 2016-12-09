@@ -84,6 +84,6 @@ We also include a convenience function to parse values from an HTTP request
 (query arguments or body data):
 
 ```go
-// func ParseArg(r *http.Request, name string, kindName string, required bool) (value interface{}) {
-parse.ParseArg(r, "x", "float64", true)
+// func ParseRequestArg(r *http.Request, name string, kindName string, required bool) (value interface{})
+parse.ParseRequestArg(r, "varname", "float64", true).(float64)
 ```
