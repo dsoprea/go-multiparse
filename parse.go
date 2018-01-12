@@ -3,6 +3,7 @@ package parse
 import (
     "net/http"
 
+    "os"
     "fmt"
     "reflect"
     "time"
@@ -49,7 +50,7 @@ var (
     }
 
     stringType = reflect.TypeOf("")
-    
+
     t = time.Time{}
 
     KindNameZeroType = map[string]reflect.Type {
@@ -143,13 +144,26 @@ func Parse(valueRaw interface{}, toKindName string) interface{} {
     return parsed[0].Interface()
 }
 
-// ParseRequestArg A convenience function to parse values from an incoming 
-// request.
-func ParseRequestArg(r *http.Request, name string, kindName string, required bool) (value interface{}) {
+// FromRequest parses values from an HTTP request.
+func FromRequest(r *http.Request, name string, kindName string, required bool) (value interface{}) {
     valueRaw := r.FormValue(name)
     if valueRaw == "" {
         if required == true {
             log.Panic(fmt.Errorf("query argument empty or omitted: [%s]", name))
+        } else {
+            return nil
+        }
+    }
+
+    return Parse(valueRaw, kindName)
+}
+
+// FromEnviron parses values from the environment
+func FromEnviron(name string, kindName string, required bool) (value interface{}) {
+    valueRaw := os.Getenv(name)
+    if valueRaw == "" {
+        if required == true {
+            log.Panic(fmt.Errorf("environment argument empty or omitted: [%s]", name))
         } else {
             return nil
         }

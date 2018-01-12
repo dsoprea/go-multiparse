@@ -80,10 +80,13 @@ Note that using a parser this way returns the desired type directly (not as a `i
 
 ## Utilities
 
-We also include a convenience function to parse values from an HTTP request 
+We also include a convenience function to parse values from an HTTP request
 (query arguments or body data):
 
 ```go
-// func ParseRequestArg(r *http.Request, name string, kindName string, required bool) (value interface{})
-parse.ParseRequestArg(r, "varname", "float64", true).(float64)
+// func FromRequest(r *http.Request, name string, kindName string, required bool) (value interface{})
+v := parse.FromRequest(r, "varname", "float64", true).(float64)
+
+// func FromEnviron(name string, kindName string, required bool) (value interface{})
+v := parse.FromEnviron("varname", "float64", true).(float64)
 ```
