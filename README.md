@@ -84,9 +84,19 @@ We also include a convenience function to parse values from an HTTP request
 (query arguments or body data):
 
 ```go
-// func FromRequest(r *http.Request, name string, kindName string, required bool) (value interface{})
-v := parse.FromRequest(r, "varname", "float64", true).(float64)
+// func FromRequestBody(r *http.Request, name string, kindName string, required bool) (value interface{})
+v = parse.FromRequestBody(r, "varname", "float64", true).(float64)
+
+// func (jrp *parse.JsonRequestParser) Get(name string, kindName string, required bool) (value interface{})
+jrp := parse.NewJsonRequestParser(r)
+v = jrp.Get("account_id", "uint64", true).(uint64)
+
+// func FromMap(dict map[string]string, name string, kindName string, required bool) (value interface{}) {
+v = parse.FromMap(d, "account_id", "uint64", true).(uint64)
+
+// func FromInterfaceMap(dict map[string]interface{}, name string, kindName string, required bool) (value interface{}) {
+v = parse.FromInterfaceMap(d, "account_id", "uint64", true).(uint64)
 
 // func FromEnviron(name string, kindName string, required bool) (value interface{})
-v := parse.FromEnviron("varname", "float64", true).(float64)
+v = parse.FromEnviron("varname", "float64", true).(float64)
 ```

@@ -21,7 +21,7 @@ func TestFromRequest_String_Required_Hit(t *testing.T) {
     req.Form = url.Values{}
     req.Form.Add("SomeKey", "SomeValue")
 
-    actual := FromRequest(req, "SomeKey", "string", true)
+    actual := FromRequestBody(req, "SomeKey", "string", true)
     expected := "SomeValue"
 
     if actual != expected {
@@ -39,7 +39,7 @@ func TestFromRequest_String_Required_Miss(t *testing.T) {
 
         err := errRaw.(error)
 
-        if err.Error() != "query argument empty or omitted: [SomeKey]" {
+        if err.Error() != "regular body argument empty or omitted: [SomeKey]" {
             t.Fatalf("There was an error for a missing but required query argument but it was not the right error: [%v]", err)
         }
     }()
@@ -49,7 +49,7 @@ func TestFromRequest_String_Required_Miss(t *testing.T) {
         t.Fatalf("Could not fabricate request: [%s]", err)
     }
 
-    FromRequest(req, "SomeKey", "string", true)
+    FromRequestBody(req, "SomeKey", "string", true)
 }
 
 func TestFromRequest_String_Optional_Hit(t *testing.T) {
@@ -61,7 +61,7 @@ func TestFromRequest_String_Optional_Hit(t *testing.T) {
     req.Form = url.Values{}
     req.Form.Add("SomeKey", "SomeValue")
 
-    actual := FromRequest(req, "SomeKey", "string", false)
+    actual := FromRequestBody(req, "SomeKey", "string", false)
     expected := "SomeValue"
 
     if actual != expected {
@@ -76,7 +76,7 @@ func TestFromRequest_String_Optional_Miss(t *testing.T) {
         t.Fatalf("Could not fabricate request: [%s]", err)
     }
 
-    recovered := FromRequest(req, "SomeKey", "string", false)
+    recovered := FromRequestBody(req, "SomeKey", "string", false)
     if recovered != nil {
         t.Fatalf("Read value should've been nil: [%s]", recovered)
     }
@@ -93,7 +93,7 @@ func TestFromRequest_Uint64(t *testing.T) {
     req.Form = url.Values{}
     req.Form.Add("SomeKey", valueRaw)
 
-    recovered := FromRequest(req, "SomeKey", "uint64", false)
+    recovered := FromRequestBody(req, "SomeKey", "uint64", false)
     if recovered != uint64(123) {
         t.Fatalf("Read value does not equal written UINT64 value: [%v] != [%s]",
                  recovered, valueRaw)

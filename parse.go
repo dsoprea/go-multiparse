@@ -1,12 +1,14 @@
 package parse
 
 import (
-    "net/http"
-
     "os"
     "fmt"
     "reflect"
     "time"
+    "strings"
+
+    "net/http"
+    "encoding/json"
 
     "github.com/dsoprea/go-logging"
 )
@@ -144,18 +146,88 @@ func Parse(valueRaw interface{}, toKindName string) interface{} {
     return parsed[0].Interface()
 }
 
-// FromRequest parses values from an HTTP request.
-func FromRequest(r *http.Request, name string, kindName string, required bool) (value interface{}) {
+// FromRequestBody parses values from an HTTP request.
+func FromRequestBody(r *http.Request, name string, kindName string, required bool) (value interface{}) {
     valueRaw := r.FormValue(name)
     if valueRaw == "" {
         if required == true {
-            log.Panic(fmt.Errorf("query argument empty or omitted: [%s]", name))
+            log.Panic(fmt.Errorf("regular body argument empty or omitted: [%s]", name))
         } else {
             return nil
         }
     }
 
     return Parse(valueRaw, kindName)
+}
+
+
+type JsonRequestParser struct {
+    data map[string]interface{}
+}
+
+func NewJsonRequestParser(r *http.Request) *JsonRequestParser {
+    d := map[string]interface{} {}
+
+    ct := r.Header.Get("Content-Type")
+    ct = strings.ToLower(ct)
+    if ct != "" && ct != "application/json" {
+        log.Panicf("content-type not supported")
+    }
+
+    j := json.NewDecoder(r.Body)
+    defer r.Body.Close()
+
+    err := j.Decode(&d)
+    log.PanicIf(err)
+
+    jrp := &JsonRequestParser{
+        data: d,
+    }
+
+    return jrp
+}
+
+// Get parses values from an HTTP request.
+func (jrp *JsonRequestParser) Get(name string, kindName string, required bool) (value interface{}) {
+    valueRaw := jrp.data[name]
+    if valueRaw == "" {
+        if required == true {
+            log.Panic(fmt.Errorf("JSON body argument empty or omitted: [%s]", name))
+        } else {
+            return nil
+        }
+    }
+
+    return Parse(valueRaw, kindName)
+}
+
+// FromMap parses values from a map.
+func FromMap(dict map[string]string, name string, kindName string, required bool) (value interface{}) {
+    valueRaw := dict[name]
+    if valueRaw == "" {
+        if required == true {
+            log.Panic(fmt.Errorf("map key empty or absent: [%s]", name))
+        } else {
+            return nil
+        }
+    }
+
+    return Parse(valueRaw, kindName)
+}
+
+// FromInterfaceMap parses values from a map.
+func FromInterfaceMap(dict map[string]interface{}, name string, kindName string, required bool) (value interface{}) {
+    valueRaw := dict[name]
+    valueString := valueRaw.(string)
+    if valueString == "" {
+        if required == true {
+            log.Panic(fmt.Errorf("map key empty or absent: [%s]", name))
+        } else {
+            return nil
+        }
+    }
+
+    return Parse(valueString, kindName)
 }
 
 // FromEnviron parses values from the environment
