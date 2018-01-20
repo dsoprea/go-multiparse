@@ -146,7 +146,7 @@ func Parse(valueRaw interface{}, toKindName string) interface{} {
     return parsed[0].Interface()
 }
 
-// FromRequestBody parses values from an HTTP request.
+// FromRequestBody parses values from a form-encoded HTTP request's body.
 func FromRequestBody(r *http.Request, name string, kindName string, required bool) (value interface{}) {
     valueRaw := r.FormValue(name)
     if valueRaw == "" {
@@ -160,6 +160,33 @@ func FromRequestBody(r *http.Request, name string, kindName string, required boo
     return Parse(valueRaw, kindName)
 }
 
+// FromRequestQuery parses values from an HTTP request's query.
+func FromRequestQuery(r *http.Request, name string, kindName string, required bool) (value interface{}) {
+    valueRaw := r.URL.Query().Get(name)
+    if valueRaw == "" {
+        if required == true {
+            log.Panic(fmt.Errorf("query argument empty or omitted: [%s]", name))
+        } else {
+            return nil
+        }
+    }
+
+    return Parse(valueRaw, kindName)
+}
+
+// FromRequestHeader parses values from an HTTP request's headers.
+func FromRequestHeader(r *http.Request, name string, kindName string, required bool) (value interface{}) {
+    valueRaw := r.Header.Get(name)
+    if valueRaw == "" {
+        if required == true {
+            log.Panic(fmt.Errorf("HTTP header empty or omitted: [%s]", name))
+        } else {
+            return nil
+        }
+    }
+
+    return Parse(valueRaw, kindName)
+}
 
 type JsonRequestParser struct {
     data map[string]interface{}

@@ -6,13 +6,15 @@ import (
 
     "net/http"
     "net/url"
+
+    "github.com/dsoprea/go-logging"
 )
 
 const (
     testEnvironmentKey = "_MULTIPARSE_TEST"
 )
 
-func TestFromRequest_String_Required_Hit(t *testing.T) {
+func TestFromRequestBody_String_Required_Hit(t *testing.T) {
     req, err := http.NewRequest("GET", "http://example.com", nil)
     if err != nil {
         t.Fatalf("Could not fabricate request: [%s]", err)
@@ -30,7 +32,7 @@ func TestFromRequest_String_Required_Hit(t *testing.T) {
     }
 }
 
-func TestFromRequest_String_Required_Miss(t *testing.T) {
+func TestFromRequestBody_String_Required_Miss(t *testing.T) {
     defer func() {
         errRaw := recover()
         if errRaw == nil {
@@ -52,7 +54,7 @@ func TestFromRequest_String_Required_Miss(t *testing.T) {
     FromRequestBody(req, "SomeKey", "string", true)
 }
 
-func TestFromRequest_String_Optional_Hit(t *testing.T) {
+func TestFromRequestBody_String_Optional_Hit(t *testing.T) {
     req, err := http.NewRequest("GET", "http://example.com", nil)
     if err != nil {
         t.Fatalf("Could not fabricate request: [%s]", err)
@@ -70,7 +72,7 @@ func TestFromRequest_String_Optional_Hit(t *testing.T) {
     }
 }
 
-func TestFromRequest_String_Optional_Miss(t *testing.T) {
+func TestFromRequestBody_String_Optional_Miss(t *testing.T) {
     req, err := http.NewRequest("GET", "http://example.com", nil)
     if err != nil {
         t.Fatalf("Could not fabricate request: [%s]", err)
@@ -82,7 +84,7 @@ func TestFromRequest_String_Optional_Miss(t *testing.T) {
     }
 }
 
-func TestFromRequest_Uint64(t *testing.T) {
+func TestFromRequestBody_Uint64(t *testing.T) {
     req, err := http.NewRequest("GET", "http://example.com", nil)
     if err != nil {
         t.Fatalf("Could not fabricate request: [%s]", err)
@@ -97,6 +99,47 @@ func TestFromRequest_Uint64(t *testing.T) {
     if recovered != uint64(123) {
         t.Fatalf("Read value does not equal written UINT64 value: [%v] != [%s]",
                  recovered, valueRaw)
+    }
+}
+
+func TestFromRequestQuery(t *testing.T) {
+    req, err := http.NewRequest("GET", "http://example.com", nil)
+    if err != nil {
+        t.Fatalf("Could not fabricate request: [%s]", err)
+    }
+
+    u, err := url.Parse("?aa=123")
+    log.PanicIf(err)
+
+    req.URL = u
+
+    actualRaw := FromRequestQuery(req, "aa", "uint64", true)
+    actual := actualRaw.(uint64)
+
+    expected := uint64(123)
+
+    if actual != expected {
+        t.Fatalf("Actual value does not equal expected value: [%d] != [%d]",
+                 actual, expected)
+    }
+}
+
+func TestFromRequestHeader(t *testing.T) {
+    req, err := http.NewRequest("GET", "http://example.com", nil)
+    if err != nil {
+        t.Fatalf("Could not fabricate request: [%s]", err)
+    }
+
+    req.Header.Set("AA", "123")
+
+    actualRaw := FromRequestHeader(req, "AA", "uint64", true)
+    actual := actualRaw.(uint64)
+
+    expected := uint64(123)
+
+    if actual != expected {
+        t.Fatalf("Actual value does not equal expected value: [%d] != [%d]",
+                 actual, expected)
     }
 }
 
